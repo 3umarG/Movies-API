@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MoviesApi.DTOs;
+using MoviesApi.Models;
 using MoviesApi.Models.Errors;
 using System.Net;
 
@@ -22,7 +23,12 @@ namespace MoviesApi.Controllers
 		{
 			try
 			{
-				return Ok(await _context.Genres.ToListAsync());
+				return new OkObjectResult(new CustomOkResponse<List<Genre>>()
+				{
+					Message = "Get All Genres Successfully .",
+					StatusCode = 200,
+					Data = await _context.Genres.ToListAsync()
+				});
 			}
 			catch
 			{
