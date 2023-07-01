@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.IdentityModel.Tokens;
 using MoviesApi.DTOs;
 using MoviesApi.Models;
 using MoviesApi.Models.Errors;
 using System.Net;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MoviesApi.Controllers
 {
@@ -39,15 +43,15 @@ namespace MoviesApi.Controllers
 		[HttpPost]
 		public async Task<IActionResult> CreateGenreAsync(GenreRequestDto genre)
 		{
-			if (genre == null)
+			if (genre.Name.IsNullOrEmpty())
 			{
-				var notFoundError = new ProblemDetails()
+
+				return new NotFoundObjectResult(new CustomOkResponse<object>()
 				{
-					Status = (int)HttpStatusCode.NotFound,
-					Title = "Not Found",
-					Detail = "You should Specify the Genre Name"
-				};
-				return NotFound(notFoundError);
+					Status = false,
+					StatusCode = 404,
+					Message = "Genre Name Should be specified !!",
+				});
 			}
 			else
 			{
@@ -55,20 +59,29 @@ namespace MoviesApi.Controllers
 				await _context.AddAsync(g);
 				_context.SaveChanges();
 
-				return Ok(g);
+				// Only one message
+				//return Content(HttpStatusCode.Created.ToString(), "Created Genre Succfully");
+
+				return new ObjectResult(
+					new CustomOkResponse<Genre>()
+					{ StatusCode = 201, Data = g, Message = "Created Genre Succefully !!" })
+				{ StatusCode = StatusCodes.Status201Created };
+
+
+				//return new OkObjectResult(new CustomOkResponse<Genre>() { Data = g , StatusCode = 201});
 			}
 		}
 
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateAsync(int id, GenreRequestDto dto)
 		{
-			if(dto == null)
+			if (dto == null)
 			{
 				return BadRequest("The Genre Name should be defined !!");
 			}
 
 			var genre = await _context.Genres.FirstOrDefaultAsync(g => g.ID == id);
-			if(genre is null)
+			if (genre is null)
 			{
 				return NotFound(new NotFoundError($"Cannot found Genre with ID : {id}"));
 			}
