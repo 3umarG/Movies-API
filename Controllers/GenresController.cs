@@ -115,13 +115,25 @@ namespace MoviesApi.Controllers
 			var genre = await _context.Genres.FirstOrDefaultAsync(g => g.ID == id);
 			if (genre is null)
 			{
-				return NotFound(new NotFoundError($"Cannot found Genre with ID : {id}"));
+				return NotFound(new CustomOkResponse<object>()
+				{ 
+					Status = false,
+					Message = $"Cannot Find Genre with id : {id}",
+					StatusCode = 404
+				});
 			}
 
 			_context.Remove(genre);
 			_context.SaveChanges();
 
-			return Ok(genre);
+			//return NoContent();
+			return new OkObjectResult(
+				new CustomOkResponse<Genre>()
+				{
+					StatusCode = (int)HttpStatusCode.OK,
+					Message = "Deleted Genre Successfuly",
+					Data = genre,
+				});
 		}
 	}
 }
