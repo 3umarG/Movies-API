@@ -27,7 +27,7 @@ namespace MoviesApi.Controllers
 		{
 			try
 			{
-				return new OkObjectResult(new CustomOkResponse<List<Genre>>()
+				return new OkObjectResult(new CustomResponse<List<Genre>>()
 				{
 					Message = "Get All Genres Successfully .",
 					StatusCode = 200,
@@ -46,7 +46,7 @@ namespace MoviesApi.Controllers
 			if (genre.Name.IsNullOrEmpty())
 			{
 
-				return new NotFoundObjectResult(new CustomOkResponse<object>()
+				return new NotFoundObjectResult(new CustomResponse<object>()
 				{
 					Status = false,
 					StatusCode = 404,
@@ -63,7 +63,7 @@ namespace MoviesApi.Controllers
 				//return Content(HttpStatusCode.Created.ToString(), "Created Genre Succfully");
 
 				return new ObjectResult(
-					new CustomOkResponse<Genre>()
+					new CustomResponse<Genre>()
 					{ StatusCode = 201, Data = g, Message = "Created Genre Succefully !!" })
 				{ StatusCode = StatusCodes.Status201Created };
 
@@ -77,7 +77,7 @@ namespace MoviesApi.Controllers
 		{
 			if (dto.Name.IsNullOrEmpty())
 			{
-				return new BadRequestObjectResult(new CustomOkResponse<object>()
+				return new BadRequestObjectResult(new CustomResponse<object>()
 				{ 
 					Status = false,
 					StatusCode = 400,
@@ -88,7 +88,7 @@ namespace MoviesApi.Controllers
 			var genre = await _context.Genres.FirstOrDefaultAsync(g => g.ID == id);
 			if (genre is null)
 			{
-				return new NotFoundObjectResult(new CustomOkResponse<object>()
+				return new NotFoundObjectResult(new CustomResponse<object>()
 				{ 
 					Status = false,
 					StatusCode = 404,
@@ -100,7 +100,7 @@ namespace MoviesApi.Controllers
 			_context.SaveChanges();
 
 
-			return new OkObjectResult(new CustomOkResponse<Genre>()
+			return new OkObjectResult(new CustomResponse<Genre>()
 			{
 				StatusCode = 200,
 				Data = genre,
@@ -115,7 +115,7 @@ namespace MoviesApi.Controllers
 			var genre = await _context.Genres.FirstOrDefaultAsync(g => g.ID == id);
 			if (genre is null)
 			{
-				return NotFound(new CustomOkResponse<object>()
+				return NotFound(new CustomResponse<object>()
 				{ 
 					Status = false,
 					Message = $"Cannot Find Genre with id : {id}",
@@ -128,7 +128,7 @@ namespace MoviesApi.Controllers
 
 			//return NoContent();
 			return new OkObjectResult(
-				new CustomOkResponse<Genre>()
+				new CustomResponse<Genre>()
 				{
 					StatusCode = (int)HttpStatusCode.OK,
 					Message = "Deleted Genre Successfuly",

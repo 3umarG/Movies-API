@@ -1,6 +1,6 @@
 ﻿namespace MoviesApi.Models
 {
-	public class CustomOkResponse<T> 
+	public class CustomResponse<T> 
 	{
 		public bool Status { get; set; } = true;	
 		public int StatusCode { get; set; }
