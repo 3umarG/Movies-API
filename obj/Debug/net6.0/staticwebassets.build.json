@@ -1,8 +1,8 @@
 {
   "Version": 1,
-  "Hash": "1XyL0z7WASOEKgCdEw7y0saffVj3bUAQPR5aDUyHKxI=",
-  "Source": "FirstWebApi",
-  "BasePath": "_content/FirstWebApi",
+  "Hash": "f3m1YSv74p1ebfpYPP7pw8eMs47zPQO3ZwQlwWtr2jo=",
+  "Source": "MoviesApi",
+  "BasePath": "_content/MoviesApi",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
