@@ -75,22 +75,37 @@ namespace MoviesApi.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateAsync(int id, GenreRequestDto dto)
 		{
-			if (dto == null)
+			if (dto.Name.IsNullOrEmpty())
 			{
-				return BadRequest("The Genre Name should be defined !!");
+				return new BadRequestObjectResult(new CustomOkResponse<object>()
+				{ 
+					Status = false,
+					StatusCode = 400,
+					Message = "You should provide Genre name for update" 
+				});
 			}
 
 			var genre = await _context.Genres.FirstOrDefaultAsync(g => g.ID == id);
 			if (genre is null)
 			{
-				return NotFound(new NotFoundError($"Cannot found Genre with ID : {id}"));
+				return new NotFoundObjectResult(new CustomOkResponse<object>()
+				{ 
+					Status = false,
+					StatusCode = 404,
+					Message = $"There is no Genre with ID : {id}"
+				});
 			}
 
 			genre.Name = dto.Name;
 			_context.SaveChanges();
 
 
-			return Ok(genre);
+			return new OkObjectResult(new CustomOkResponse<Genre>()
+			{
+				StatusCode = 200,
+				Data = genre,
+				Message = $"Genre with ID : {id} Update Successfully"
+			});
 		}
 
 
