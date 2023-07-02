@@ -76,6 +76,45 @@ namespace MoviesApi.Controllers
 			return SuccessObjectResult<MovieResponseDto>(movie, (int)HttpStatusCode.OK);
 		}
 
+
+		[HttpGet("GetMoviesByGenreId")]
+		public async Task<IActionResult> GetMoviesByGenreId(byte id)
+		{
+			var isValidGenre = await _context.Genres.AnyAsync(G => G.ID == id);
+			if (!isValidGenre)
+			{
+				return new NotFoundObjectResult(
+						new CustomResponse<object>()
+						{
+							StatusCode = (int)HttpStatusCode.NotFound,
+							Message = "Failure",
+							Status = false,
+							Errors = new List<string> { "The Provided Genre ID was not exists" }
+						}
+					)
+				{ StatusCode = (int)HttpStatusCode.NotFound };
+			}
+
+			var movies = await _context
+				.Movies
+				.Where(M => M.GenreID == id)
+				.Select(M => new MovieResponseDto()
+				{
+					Genre = new GenreResponseDto
+					{
+						Id = M.Genre.ID,
+						Name = M.Genre.Name
+					},
+					ID = M.ID,
+					Rate = M.Rate,
+					Title = M.Title,
+					StoryLine = M.StoryLine,
+					Year = M.Year
+				})
+				.ToListAsync();
+			return SuccessObjectResult<List<MovieResponseDto>>(movies, (int)HttpStatusCode.OK);
+		}
+
 		[HttpPost]
 		public async Task<IActionResult> Create([FromForm] MovieRequestDto dto)
 		{
