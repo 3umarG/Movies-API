@@ -143,6 +143,36 @@ namespace MoviesApi.Controllers
 			return SuccessObjectResult<Movie>(movie, (int)HttpStatusCode.Created);
 		}
 
+
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> Delete(int id)
+		{
+			var movie = await _context.Movies.FindAsync(id);
+			if (movie is null)
+				return new NotFoundObjectResult(new CustomResponse<object>()
+				{
+					Errors = new List<string> { $"There is no Movies with the id : {id}" },
+					Message = "Failure",
+					Status = false,
+					StatusCode = (int)HttpStatusCode.NotFound
+				});
+
+
+
+			_context.Movies.Remove(movie);
+			await _context.SaveChangesAsync();
+			return SuccessObjectResult<Movie>(movie, 200);
+		}
+
+
+
+
+
+
+
+
+
+
 		private static ObjectResult SuccessObjectResult<T>(T data, int statusCode)
 		{
 			return new ObjectResult(new CustomResponse<T>()
