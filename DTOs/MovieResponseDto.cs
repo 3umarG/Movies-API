@@ -2,9 +2,17 @@
 {
 	public record MovieResponseDto
 	{
-        public  int Id { get; set; }
-        public string   Name { get; set; }
+		public int ID { get; set; }
 
-        public GenreResponseDto Genre { get; set; }
-    }
+		public string Title { get; set; }
+
+		public int Year { get; set; }
+
+		public double Rate { get; set; }
+
+		public string StoryLine { get; set; }
+
+
+		public GenreResponseDto Genre { get; set; }
+	}
 }

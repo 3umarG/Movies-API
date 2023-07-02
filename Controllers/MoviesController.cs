@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using MoviesApi.DTOs;
-using System.Net;
+﻿
 
 namespace MoviesApi.Controllers
 {
@@ -29,16 +25,55 @@ namespace MoviesApi.Controllers
 				.AsNoTracking()
 				.Select(M => new MovieResponseDto()
 				{
-					Id = M.ID,
-					Name = M.Title,
+					ID = M.ID,
+					Title = M.Title,
 					Genre = new GenreResponseDto()
 					{
-						Id =  M.Genre.ID,
+						Id = M.Genre.ID,
 						Name = M.Genre.Name
 					}
 				})
 				.ToListAsync();
 			return SuccessObjectResult<List<MovieResponseDto>>(movies, (int)HttpStatusCode.OK);
+		}
+
+		[HttpGet("{id:int}")]
+		public async Task<IActionResult> GetMovieByIdAsync(int id)
+		{
+			var movie = await _context
+				.Movies
+				.Include(M => M.Genre)
+				.Select(M => new MovieResponseDto()
+				{
+					ID = M.ID,
+					Title = M.Title,
+					Genre = new GenreResponseDto()
+					{
+						Id = M.Genre.ID,
+						Name = M.Genre.Name
+					},
+					StoryLine = M.StoryLine,
+					Rate = M.Rate,
+					Year = M.Year
+				})
+				.FirstOrDefaultAsync(M => M.ID == id);
+			//var movieDto = new MovieResponseDto();
+			if (movie is null)
+			{
+				return new NotFoundObjectResult(
+					new CustomResponse<object>()
+					{
+						//Errors = new List<string> { "The provided Movide ID was not exists" },
+						Message = "The provided Movie ID was not exists",
+						StatusCode = (int)HttpStatusCode.NotFound,
+						Status = false,
+
+					}
+
+				);
+			}
+
+			return SuccessObjectResult<MovieResponseDto>(movie, (int)HttpStatusCode.OK);
 		}
 
 		[HttpPost]
@@ -139,7 +174,7 @@ namespace MoviesApi.Controllers
 		{
 			return new BadRequestObjectResult(new CustomResponse<object>
 			{
-				Message = "You response was bad , see the errors !!!",
+				Message = "Failure",
 				Status = false,
 				StatusCode = (int)HttpStatusCode.BadRequest,
 				Errors = errors
