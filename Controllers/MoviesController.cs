@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MoviesApi.DTOs;
 using System.Net;
 
 namespace MoviesApi.Controllers
@@ -10,10 +11,34 @@ namespace MoviesApi.Controllers
 	public class MoviesController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
+		private readonly string[] _allowedImageExtensions = { ".jpg", ".png" };
+		private readonly long _maxPosterLengthInByte = 1048576;
 
 		public MoviesController(ApplicationDbContext context)
 		{
 			_context = context;
+		}
+
+
+		[HttpGet]
+		public async Task<IActionResult> GetAllAsync()
+		{
+			var movies = await _context
+				.Movies
+				.Include(M => M.Genre)
+				.AsNoTracking()
+				.Select(M => new MovieResponseDto()
+				{
+					Id = M.ID,
+					Name = M.Title,
+					Genre = new GenreResponseDto()
+					{
+						Id =  M.Genre.ID,
+						Name = M.Genre.Name
+					}
+				})
+				.ToListAsync();
+			return SuccessObjectResult<List<MovieResponseDto>>(movies, (int)HttpStatusCode.OK);
 		}
 
 		[HttpPost]
@@ -41,23 +66,23 @@ namespace MoviesApi.Controllers
 			_context.Add(movie);
 			await _context.SaveChangesAsync();
 
-			return SuccessObjectResult(movie, (int)HttpStatusCode.Created);
+			return SuccessObjectResult<Movie>(movie, (int)HttpStatusCode.Created);
 		}
 
-		private static ObjectResult SuccessObjectResult(Movie movie, int statusCode)
+		private static ObjectResult SuccessObjectResult<T>(T data, int statusCode)
 		{
-			return new ObjectResult(new CustomResponse<Movie>()
+			return new ObjectResult(new CustomResponse<T>()
 			{
 				StatusCode = statusCode,
-				Data = movie,
-				Message = "Success !!",
+				Data = data,
+				Message = "Success",
 			})
 			{ StatusCode = statusCode };
 		}
 
 		private async Task CreateMovieErrorsHandler(MovieRequestDto dto, List<string> errors)
 		{
-			if(dto is null)
+			if (dto is null)
 			{
 				errors.Add("Please Provide you Movie info");
 				return;
@@ -67,21 +92,30 @@ namespace MoviesApi.Controllers
 			{
 				errors.Add(HandleErrorMessage("Poster"));
 			}
+			else if (dto.Poster.Length > _maxPosterLengthInByte)
+			{
+				errors.Add("The Poster size is too big , it shouldn't exceed 1MB");
+			}
+			else if (!_allowedImageExtensions.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
+			{
+				errors.Add("You Poster image should be .png / .jpg Only");
+			}
 
 			if (dto.Title.IsNullOrEmpty())
 			{
 				errors.Add(HandleErrorMessage("Title"));
 			}
 
-			if(dto.Rate is null)
+			if (dto.Rate is null)
 			{
 				errors.Add(HandleErrorMessage("Rate"));
-			}else if(dto.Rate.Value <0 || dto.Rate.Value > 10)
+			}
+			else if (dto.Rate.Value < 0 || dto.Rate.Value > 10)
 			{
 				errors.Add("Invalid Rate , the Rate should be between 0 - 10");
 			}
 
-			if(dto.GenreID is null)
+			if (dto.GenreID is null)
 			{
 				errors.Add("You should provide GenreId for the Movie");
 			}
@@ -93,6 +127,7 @@ namespace MoviesApi.Controllers
 			{
 				errors.Add($"The Provided Genre ID : {dto.GenreID} doesn't exists !!");
 			}
+
 		}
 
 		private string HandleErrorMessage(string name)
