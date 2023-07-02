@@ -144,6 +144,55 @@ namespace MoviesApi.Controllers
 		}
 
 
+		[HttpPut("{id}")]
+		public async Task<IActionResult> Update(int id, [FromForm] MovieRequestDto dto)
+		{
+			var movie = await _context.Movies.Include(M => M.Genre).FirstOrDefaultAsync(M => M.ID == id);
+			if (movie is null)
+			{
+				return HandleBadRequestError(new List<string> { $"There is no Movie with ID : {id}" });
+			}
+			var errors = new List<string>();
+			await CreateMovieErrorsHandler(dto, errors);
+
+			if (errors.Count > 0)
+			{
+				return HandleBadRequestError(errors);
+			}
+
+			if (dto.Poster != null)
+			{
+				using var dataStream = new MemoryStream();
+				await dto.Poster!.CopyToAsync(dataStream);
+
+				movie.Poster = dataStream.ToArray();
+			}
+
+			movie.StoryLine = dto.StoryLine!;
+			movie.Year = dto.Year!.Value;
+			movie.GenreID = dto.GenreID!.Value;
+			movie.Rate = dto.Rate!.Value;
+			movie.Title = dto.Title!;
+
+			_context.SaveChanges();
+
+			return SuccessObjectResult(new MovieResponseDto()
+			{
+				ID = id,
+				Title = movie.Title,
+				Genre = new GenreResponseDto
+				{
+					Id = movie.GenreID,
+					Name = movie.Genre.Name
+				},
+				Rate = movie.Rate,
+				StoryLine = movie.StoryLine,
+				Year = movie.Year,
+			}, 200);
+
+		}
+
+
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
@@ -192,17 +241,16 @@ namespace MoviesApi.Controllers
 				return;
 			}
 			var isValidGenre = await _context.Genres.AnyAsync(G => G.ID == dto.GenreID);
-			if (dto.Poster is null)
+			if (dto.Poster != null)
 			{
-				errors.Add(HandleErrorMessage("Poster"));
-			}
-			else if (dto.Poster.Length > _maxPosterLengthInByte)
-			{
-				errors.Add("The Poster size is too big , it shouldn't exceed 1MB");
-			}
-			else if (!_allowedImageExtensions.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
-			{
-				errors.Add("You Poster image should be .png / .jpg Only");
+				if (dto.Poster.Length > _maxPosterLengthInByte)
+				{
+					errors.Add("The Poster size is too big , it shouldn't exceed 1MB");
+				}
+				else if (!_allowedImageExtensions.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
+				{
+					errors.Add("You Poster image should be .png / .jpg Only");
+				}
 			}
 
 			if (dto.Title.IsNullOrEmpty())
